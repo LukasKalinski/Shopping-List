@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE cylab-controller SYSTEM "cylab-controller.dtd">
+
+<!ELEMENT command
+  (filter*, cmd-inline*, (cmd-forward | view)?, status, command*)
+>
+<!ATTLIST command
+  name CDATA #REQUIRED
+>
+
+<!ELEMENT status (filter*, (cmd-forward | (cmd-inline*, view)))>
+<!ATTLIST status
+  value (CMD_OK | CMD_ERROR | CMD_INSUFFICIENT_DATA)
+>
+
+<!ELEMENT filter EMPTY>
+<!ATTLIST filter
+  apply CDATA #REQUIRED
+>
+
+<!ELEMENT cmd-inline EMPTY>
+<!ATTLIST
+  run CDATA #REQUIRED
+>
+
+<!ELEMENT cmd-forward EMPTY>
+<!ATTLIST
+  run CDATA #REQUIRED
+>
+
+<!--
+  <view>...</view> // Might be many views, therefore normal tag.
+  <filter apply="..." /> // Only one filter to apply, therefore empty tag.
+  <cmd-inline run="..." /> // Only one command to run, therefore empty tag.
+  <cmd-forward run="..." /> // Only one command to run, therefore empty tag.
+-->
+
+<cylab-controller>
+  <filter>ContentType</filter>
+  <filter>Encoding</filter>
+  
+  <command name="Outside">
+    <filter>AccessGuard</filter>
+  </command>
+  
+  <command name="Inside">
+    <filter apply="Authenticate" />
+    <cmd-inline run="Inside_Calendar_GetCurrent" />
+    
+    <command name="Calendar">
+      <command name="GetCurrent">
+        <view>calendar/get_current</view>
+      </command>
+    </command>
+    
+    <command name="Recipe">
+      <command name="GetNew">
+      </command>
+    </command>
+    
+    <command name="">
+      
+    </command>
+  </command>
+  
+  <command name="System">
+    <filter>AccessGuard</filter>
+    <command name="Error">
+      <view>system/error</view>
+    </command>
+  </command>
+  
+  <status value="CMD_ERROR">
+    <cmd-forward>System_Error</cmd-forward>
+  </status>
+  
+  <status value="CMD_INSUFFICIENT_DATA">
+    <cmd-forward>System_Error</cmd-forward>
+  </status>
+</cylab-controller>
+  
+  
+  
+  
+  
+  
+  
+  <!-- Default views (when no command is issued) -->
+  <command>
+    <view>main_outside</view>
+    <status value="CMD_OK">
+      <forward>System_Feedback</forward>
+    </status>
+    <status value="CMD_ERROR">
+      <forward>System_Error</forward>
+    </status>
+    <status value="CMD_INSUFFICIENT_DATA">
+      <forward>System_Error</forward>
+    </status>
+  </command>
+  
+  
+  <controller name="News">
+    <action name="ListCurrent">
+      <run controller="Recipe" action="ShowNew">
+        <param>1</param>
+      </run>
+    </action>
+  </command>
+  
+  <command controller="SYSTEM" action="LOGIN">
+    <view>main_outside</view>
+    <view status="CMD_OK">main_inside</view>
+  </command>
+  
+  <command controller="SYSTEM" action="System_Logout">
+    <view>main_outside</view>
+    <view status="CMD_OK">main_outside</view>
+  </command>

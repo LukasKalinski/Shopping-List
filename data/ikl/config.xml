@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+  <production>
+    <database>
+      <user>ikl</user>
+      <password>!bf7OiUUmc</password>
+      <dsn>pgsql:host=localhost;dbname=ikl</dsn>
+    </database>
+  </production>
+  <staging extends="production">
+  </staging>
+</config>

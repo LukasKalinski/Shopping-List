@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE cyfram-controller SYSTEM "cyfram-controller.dtd">
+
+<cyfram-controller>
+  <filter apply="AccessGuard"/>
+  <filter apply="Encoding"/>
+  <filter apply="ContentType"/>
+
+  <!-- System handler: -->
+  <handler name="System">
+    <command name="Login">
+      <forward-call command="News.GetNew"/>
+    </command>
+    <command name="Logout">
+      <forward-call command="News.GetNew"/>
+    </command>
+    <command name="HandleError">
+      <forward-call command="System.SendMessage">
+        <param name="type">ERROR</param>
+      </forward-call>
+    </command>
+    <command name="SendMessage">
+      <view>system/send_message</view>
+    </command>
+  </handler>
+  
+  <!-- News handler: -->
+  <handler name="News">
+    <command name="GetNew">
+      <view>news/show_new</view>
+    </command>
+  </handler>
+  
+  <!-- Account handler: -->
+  <handler name="Account" default="Get">
+    <!-- Account User handler: -->
+    <handler name="User">
+      <filter apply="Authenticate"/>
+      <command name="Create">
+        <view>account/user/create</view>
+      </command>
+      <command name="Edit">
+        <view>account/user/edit</view>
+      </command>
+    </handler>
+    
+    <command name="Create">
+      <view>account/create</view>
+    </command>
+    <command name="Edit">
+      <filter apply="Authenticate"/>
+    </command>
+    <command name="Get">
+      <filter apply="Authenticate"/>
+    </command>
+  </handler>
+</cyfram-controller>

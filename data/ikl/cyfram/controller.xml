@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE cyframController SYSTEM "cyframController.dtd">
+
+<cyframController>
+  <environment platform="PC" defaultCommand="News.Get">
+    <applyFilter filter="AccessGuard"/>
+    <applyFilter filter="Encoding"/>
+    <applyFilter filter="ContentType"/>
+    
+    <!-- Default actions for non-default status values: -->
+    <status value="CMD_ERROR">
+      <forwardToCommand command="System.HandleError"/>
+    </status>
+    <status value="CMD_INSUFFICIENT_DATA">
+      <forwardToCommand command="System.HandleError"/>
+    </status>
+    <status value="CMD_OK">
+      <forwardToCommand command="System.GetMessage"/>
+    </status>
+    
+    <!-- Common WUIs: -->
+    <wuiTemplate name="common">
+      <runCommand command="Recipe.Get">
+        <commandParam name="max_age_days">-1</commandParam>
+        <commandParam name="public">true</commandParam>
+        <commandParam name="random">true</commandParam>
+      </runCommand>
+      
+      <!-- Common "Outside" wui (user NOT logged in): -->
+      <wuiTemplate name="outside"/>
+      
+      <!-- Common "Inside" wui (user IS logged in): -->
+      <wuiTemplate name="inside">
+        <runCommand command="Recipe.Get">
+          <commandParam name="max_age_days">7</commandParam>
+          <commandParam name="public">true</commandParam>
+          <commandParam name="random">true</commandParam>
+        </runCommand>
+        <runCommand command="Marketing.Banner.Get">
+          <commandParam name="size">small</commandParam>
+          <commandParam name="max_num">3</commandParam>
+        </runCommand>
+      </wuiTemplate>
+    </wuiTemplate>
+    
+    <!-- System commands: -->
+    <module name="System">
+      <command name="Login">
+        <forwardToCommand command="News"/>
+      </command>
+      <command name="Logout">
+        <forwardToCommand command="News"/>
+      </command>
+      <command name="HandleError">
+        <takesParam name="err_id" require="yes"/>
+        <forwardToCommand command="System.GetMessage" redirect="yes"/>
+      </command>
+      <command name="GetMessage">
+        <takesParam name="msg_id" require="yes"/>
+        <wui>
+          <view>system/message</view>
+        </wui>
+      </command>
+    </module>
+    
+    <!-- Marketing commands: -->
+    <module name="Marketing">
+      <module name="Banner">
+        <command name="Get">
+          <takesParam name="size" require="yes"/>
+          <takesParam name="max_num" default="1"/>
+        </command>
+      </module>
+    </module>
+    
+    <!-- News commands: -->
+    <module name="News" defaultCommand="Get">
+      <command name="Get">
+        <takesParam name="id" require="yes"/>
+        <wui template="common">
+          <view>news/show</view>
+        </wui>
+      </command>
+      <command name="GetList">
+        <takesParam name="max_num" default="10"/>
+        <applyFilter filter="Authentication"/>
+        <wui template="common">
+          <view>news/show_list</view>
+        </wui>
+      </command>
+    </module>
+    
+    <!-- Account commands: -->
+    <module name="Account">
+      <command name="Create">
+        <wui template="common.inside">
+          <view>account/create</view>
+        </wui>
+        <status value="CMD_OK">
+          <forwardToCommand command="System.Login" redirect="yes"/>
+        </status>
+      </command>
+      <command name="Get">
+        <applyFilter filter="Authentication"/>
+        <wui template="common.inside">
+          <view>account/show_one</view>
+        </wui>
+      </command>
+      <command name="GetList">
+        <takesParam name="maxnum" default="10"/>
+        <applyFilter filter="Authentication"/>
+        <wui template="common.inside">
+          <view>account/show_list</view>
+        </wui>
+      </command>
+      <command name="Edit">
+        <applyFilter filter="Authentication"/>
+        <applyFilter filter="Authorization"/>
+        <wui template="common.inside">
+          <view>account/edit</view>
+        </wui>
+      </command>
+      <command name="Delete">
+        <applyFilter filter="Authentication"/>
+        <applyFilter filter="Authorization"/>
+        <wui template="common.inside">
+          <view>account/delete_confirm</view>
+        </wui>
+        <status value="CMD_OK">
+          <forwardToCommand command="System.GetMessage" redirect="yes"/>
+        </status>
+      </command>
+      
+      <!-- Account User commands: -->
+      <module name="User">
+        <applyFilter filter="Authentication"/>
+        <command name="Get">
+          <wui template="common.inside">
+            <view>account/user/get</view>
+          </wui>
+        </command>
+        <command name="Create">
+          <applyFilter filter="Authorization"/>
+          <wui template="common.inside">
+            <view>account/user/create</view>
+          </wui>
+        </command>
+        <command name="Edit">
+          <applyFilter filter="Authorization"/>
+          <wui template="common.inside">
+            <view>account/user/edit</view>
+          </wui>
+        </command>
+        <command name="Delete">
+          <applyFilter filter="Authorization"/>
+          <wui template="common.inside">
+            <view>account/user/delete_confirm</view>
+          </wui>
+          <status value="CMD_OK">
+            <forwardToCommand command="System.GetMessage" redirect="yes"/>
+          </status>
+        </command>
+      </module>
+    </module>
+    
+    <!-- Shopping List commands: -->
+    <module name="ShoppingList">
+      <applyFilter filter="Authentication"/>
+      <command name="Get">
+        <takesParam name="id" require="yes"/>
+        <wui template="common.inside">
+          <view>shopping_list/show_one</view>
+        </wui>
+      </command>
+      <module name="Item">
+        <command name="Get"/>
+      </module>
+    </module>
+    
+    <!-- Recipe commands: -->
+    <module name="Recipe">
+      <command name="Get">
+        <takesParam name="max_age_days" default="-1"/>
+        <takesParam name="public" default="true"/>
+        <takesParam name="random" default="false"/>
+        <wui template="common">
+          <view>recipe/show_one</view>
+        </wui>
+      </command>
+      <command name="GetList">
+        <applyFilter filter="Authentication"/>
+        <wui template="common.inside">
+          <view>recipe/show_list</view>
+        </wui>
+      </command>
+      <command name="Edit">
+        <takesParam name="id" require="yes"/>
+        <applyFilter filter="Authentication"/>
+        <applyFilter filter="Authorization"/>
+        <wui template="common.inside">
+          <view>recipe/edit</view>
+        </wui>
+      </command>
+    </module>
+  </environment>
+</cyframController>
