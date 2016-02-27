@@ -3,7 +3,7 @@
   <production>
     <database>
       <user>ikl</user>
-      <password>!bf7OiUUmc</password>
+      <password></password>
       <dsn>pgsql:host=localhost;dbname=ikl</dsn>
     </database>
   </production>
